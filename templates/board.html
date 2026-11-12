@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Quadro Kanban | QuadroLocal{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">ESPAÇO DE TRABALHO COMPARTILHADO</p><h1>Quadro de tarefas</h1>
+  <p class="muted">Organize o trabalho da equipe em um só lugar.</p></div>
+  <button class="btn primary" onclick="openCreateModal()">+ Nova tarefa</button>
+</section>
+
+<div class="toolbar">
+  <input id="search" class="search" placeholder="Buscar tarefa..." oninput="filterTasks()">
+  <span class="muted small">Atualização automática a cada 15 segundos</span>
+</div>
+
+<section class="kanban">
+{% for status in STATUSES %}
+  <div class="column" data-status="{{ status }}">
+    <div class="column-head"><h2>{{ status }}</h2><span class="count">{{ tasks|selectattr('status','equalto',status)|list|length }}</span></div>
+    <div class="task-list" data-status="{{ status }}">
+      {% for task in tasks if task.status == status %}
+      <article class="task-card" draggable="true" data-id="{{ task.id }}" data-title="{{ task.title|lower }}">
+        <div class="task-top"><span class="priority {{ task.priority|lower|replace('á','a') }}">{{ task.priority }}</span>
+          <button class="icon-btn" title="Editar tarefa" onclick="openEditModal({{ task.id }})">•••</button></div>
+        <h3>{{ task.title }}</h3>
+        {% if task.description %}<p class="task-description">{{ task.description }}</p>{% endif %}
+        <div class="task-meta">
+          <span>Responsável: {{ task.assignee.full_name if task.assignee else 'Não atribuído' }}</span>
+          {% if task.due_date %}<span>Prazo: {{ task.due_date.strftime('%d/%m/%Y') }}</span>{% endif %}
+        </div>
+        <div class="task-footer"><span class="creator">Criada por {{ task.creator.full_name }}</span>
+          <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Excluir esta tarefa definitivamente?')">
+            <button class="text-danger" title="Excluir">Excluir</button>
+          </form>
+        </div>
+        <script type="application/json" id="task-{{ task.id }}">{{ {'id':task.id,'title':task.title,'description':task.description,'status':task.status,'priority':task.priority,'due_date':task.due_date.isoformat() if task.due_date else '','assignee_id':task.assignee_id}|tojson }}</script>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+</section>
+
+<dialog id="taskModal" class="modal">
+  <form id="taskForm" method="post">
+    <div class="modal-head"><div><p class="eyebrow">QUADRO DE TAREFAS</p><h2 id="modalTitle">Nova tarefa</h2></div>
+      <button type="button" class="icon-btn close" onclick="closeModal()">✕</button></div>
+    <label>Título<input name="title" maxlength="140" required></label>
+    <label>Descrição<textarea name="description" rows="3" placeholder="Detalhes da atividade..."></textarea></label>
+    <div class="form-grid">
+      <label>Status<select name="status">{% for s in STATUSES %}<option>{{ s }}</option>{% endfor %}</select></label>
+      <label>Prioridade<select name="priority">{% for p in PRIORITIES %}<option>{{ p }}</option>{% endfor %}</select></label>
+    </div>
+    <div class="form-grid">
+      <label>Responsável<select name="assignee_id"><option value="">Não atribuído</option>{% for u in users %}<option value="{{ u.id }}">{{ u.full_name }}</option>{% endfor %}</select></label>
+      <label>Prazo<input type="date" name="due_date"></label>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn secondary" onclick="closeModal()">Cancelar</button><button class="btn primary">Salvar tarefa</button></div>
+  </form>
+</dialog>
+{% endblock %}

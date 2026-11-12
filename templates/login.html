@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Entrar | QuadroLocal{% endblock %}
+{% block content %}
+<section class="login-wrap">
+  <form class="panel login-panel" method="post">
+    <p class="eyebrow">GERENCIAMENTO DE EQUIPE</p>
+    <h1>Bem-vindo</h1>
+    <p class="muted">Entre para acessar o quadro compartilhado.</p>
+    <label>Usuário<input name="username" autocomplete="username" required autofocus></label>
+    <label>Senha<input type="password" name="password" autocomplete="current-password" required></label>
+    <button class="btn primary full">Entrar</button>
+    <p class="hint">A conta inicial de administrador está descrita no README. Altere a senha antes de disponibilizar o sistema.</p>
+  </form>
+</section>
+{% endblock %}

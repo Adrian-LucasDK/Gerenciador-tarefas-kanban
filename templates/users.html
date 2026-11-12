@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Usuários | QuadroLocal{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">ADMINISTRAÇÃO</p><h1>Usuários</h1><p class="muted">Cadastre e controle o acesso da equipe.</p></div></div>
+<div class="admin-grid">
+  <form class="panel" method="post">
+    <h2>Novo usuário</h2>
+    <label>Nome completo<input name="full_name" required maxlength="100"></label>
+    <label>Nome de usuário<input name="username" required maxlength="40"></label>
+    <label>Senha inicial<input type="password" name="password" required minlength="8"><small>Mínimo de 8 caracteres.</small></label>
+    <label>Perfil<select name="role"><option value="user">Usuário</option><option value="admin">Administrador</option></select></label>
+    <button class="btn primary">Cadastrar usuário</button>
+  </form>
+  <section class="panel">
+    <h2>Contas cadastradas</h2>
+    <div class="user-list">
+    {% for user in users %}
+      <div class="user-row"><div><strong>{{ user.full_name }}</strong><p class="muted small">@{{ user.username }} · {{ 'Administrador' if user.role == 'admin' else 'Usuário' }}</p></div>
+      <div class="user-actions"><span class="state {{ 'enabled' if user.active else 'disabled' }}">{{ 'Ativo' if user.active else 'Desativado' }}</span>
+      {% if user.id != current_user.id %}
+      <form method="post" action="{{ url_for('toggle_user', user_id=user.id) }}"><button class="btn small-btn secondary">{{ 'Desativar' if user.active else 'Ativar' }}</button></form>
+      {% endif %}</div></div>
+    {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
