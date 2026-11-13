@@ -233,6 +233,41 @@ def toggle_user(user_id):
     return redirect(url_for("manage_users"))
 
 
+@app.route("/admin/users/<int:user_id>/delete", methods=["POST"])
+@admin_required
+def delete_user(user_id):
+    user = db.get_or_404(User, user_id)
+
+    # Impede que o administrador exclua a própria conta.
+    if user.id == current_user.id:
+        flash("Você não pode excluir sua própria conta.", "error")
+        return redirect(url_for("manage_users"))
+
+    try:
+        # Remove as tarefas criadas pelo usuário excluído.
+        Task.query.filter_by(creator_id=user.id).delete(
+            synchronize_session=False
+        )
+
+        # Mantém as tarefas de outras pessoas, mas remove a atribuição.
+        Task.query.filter_by(assignee_id=user.id).update(
+            {"assignee_id": None},
+            synchronize_session=False
+        )
+
+        # Exclui definitivamente o usuário.
+        db.session.delete(user)
+        db.session.commit()
+
+        flash("Usuário excluído definitivamente.", "success")
+
+    except Exception:
+        db.session.rollback()
+        flash("Não foi possível excluir o usuário.", "error")
+
+    return redirect(url_for("manage_users"))
+
+
 @app.errorhandler(403)
 def forbidden(_):
     return render_template("error.html", code=403, message="Você não tem permissão para acessar este recurso."), 403
